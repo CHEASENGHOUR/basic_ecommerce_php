@@ -32,11 +32,13 @@
                         <div class="row my-3">
                             <div class="col-6">
                                 <label for="inputEmail4" class="form-label">Price</label>
-                                <input type="number" class="form-control" id="price" name="price" placeholder="Enter Product price $$">
+                                <input type="number" class="form-control" id="price" name="price"
+                                    placeholder="Enter Product price $$">
                             </div>
                             <div class="col-6">
                                 <label for="inputPassword4" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="qty" name="qty" placeholder="Quantity of product ...!">
+                                <input type="number" class="form-control" id="qty" name="qty"
+                                    placeholder="Quantity of product ...!">
                             </div>
                         </div>
                         <label for="" class="my-3">Product Image : </label>
@@ -82,51 +84,100 @@
                 <thead>
                     <tr>
                         <th scope="col">#</th>
-                        <th scope="col">First</th>
-                        <th scope="col">Last</th>
-                        <th scope="col">Handle</th>
+                        <th scope="col">Image</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Action</th>
                     </tr>
                 </thead>
-                <!-- <tbody>
-                    <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">2</th>
-                        <td>Jacob</td>
-                        <td>Thornton</td>
-                        <td>@fat</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">3</th>
-                        <td>John</td>
-                        <td>Doe</td>
-                        <td>@social</td>
-                    </tr>
-                </tbody> -->
+                <tbody id="data_row">
+                    
+                </tbody>
             </table>
         </div>
     </div>
 </body>
-    <script>
-        $(document).ready(function(){
-            $("#product_form").on("submit", function(e){
-                e.preventDefault();
-                var formData = new FormData(this);
-                $.ajax({
-                    url: "http://localhost:8000/api/add_product.php",
-                    method: "POST",
-                    body: formData,
-                    success: function(res){
-                        if(res.status === "success"){
-                            alert(res.message);
-                        }
+<script>
+    $(document).ready(function () {
+        $("#product_form").on("submit", function (e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            $.ajax({
+                url: "http://localhost:8000/api/add_product.php",
+                method: "POST",
+                data: formData,
+                processData: false,  // Important for file uploads
+                contentType: false,   // Important for file uploads
+                success: function (res) {
+                    if (res.status === "success") {
+                        alert(res.message);
+                        $("#add_product_modal").modal("hide");
+                        $("#product_form")[0].reset();
                     }
-                })
+                }
             })
         })
-    </script>
+
+        $.ajax({
+            url: "http://localhost:8000/api/products.php",
+            method: "GET",
+            dataType: "json",
+            success: function (res) {
+                console.log(res);
+                if (res.status === "success") {
+                    let output = "";
+                    res.data.forEach((product, index) => {
+                        output += `
+                                    <tr class="">
+                                        <th scope="row">${index + 1}</th>
+                                        <td><img src="./api/product_image/${product.product_img}" class="img-thumbnail" style="width:80px;height:80px;object-fit:cover;"/></td>
+                                        <td>${product.product_name}</td>
+                                        <td>$${product.price}</td>
+                                        <td>${product.qty}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-warning btn-sm">Edit</button>  
+                                            <button type="button" class="btn btn-danger btn-sm delete_product" data-id="${product.id}">Delete</button>    
+                                        </td>
+                                    </tr>
+                                `;
+                    });
+                    $("#data_row").html(output);
+
+                    $(".delete_product").on("click", function(e){
+                        let productId = $(this).data("id");
+                        console.log(productId);
+                        e.preventDefault();
+                        if(confirm("Are u sure?")){
+                            $.ajax({
+                                url: "http://localhost:8000/api/delete_product.php",
+                                method: "POST",
+                                data: {id: productId},
+                                dataType: "json",
+                                success: function (response) {
+                                    if (response.status === "success") {
+                                        alert(response.message);
+                                    } else {
+                                        alert(response.message);
+                                    }
+                                },
+                                error: function (xhr, status, error) {
+                                    console.error("Error:", error);
+                                }
+                                    })
+                                }
+                    })
+                } else {
+                    console.log(res.message);
+                }
+
+            },
+            error: function (xhr, status, error) {
+                console.log(error);
+
+            }
+        })
+    })
+</script>
+
 </html>
