@@ -92,7 +92,7 @@
                     </tr>
                 </thead>
                 <tbody id="data_row">
-                    
+
                 </tbody>
             </table>
         </div>
@@ -100,6 +100,69 @@
 </body>
 <script>
     $(document).ready(function () {
+
+
+        function loadData() {
+            $.ajax({
+                url: "http://localhost:8000/api/products.php",
+                method: "GET",
+                data: { _: new Date().getTime() },
+                dataType: "json",
+                success: function (res) {
+                    console.log(res);
+                    if (res.status === "success") {
+                        let output = "";
+                        res.data.forEach((product, index) => {
+                            output += `
+                                    <tr class="">
+                                        <th scope="row">${index + 1}</th>
+                                        <td><img src="./api/product_image/${product.product_img}" class="img-thumbnail" style="width:80px;height:80px;object-fit:cover;"/></td>
+                                        <td>${product.product_name}</td>
+                                        <td>$${product.price}</td>
+                                        <td>${product.qty}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-warning btn-sm">Edit</button>  
+                                            <button type="button" class="btn btn-danger btn-sm delete_product" data-id="${product.id}">Delete</button>    
+                                        </td>
+                                    </tr>
+                                `;
+                        });
+                        $("#data_row").html(output);
+                    } else {
+                        console.log(res.message);
+                    }
+
+                },
+                error: function (xhr, status, error) {
+                    console.log(error);
+
+                }
+            })
+        }
+        $("#data_row").on("click", ".delete_product" , function (e) {
+            e.preventDefault();
+            let productId = $(this).data("id");
+            console.log(productId);
+            if (confirm("Are u sure?")) {
+                $.ajax({
+                    url: "http://localhost:8000/api/delete_product.php",
+                    method: "POST",
+                    data: { id: productId },
+                    dataType: "json",
+                    success: function (response) {
+                        alert(response.message);
+                        if (response.status === "success") {
+                            loadData();
+
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error:", error);
+                    }
+                })
+            }
+        });
+        
         $("#product_form").on("submit", function (e) {
             e.preventDefault();
             var formData = new FormData(this);
@@ -114,69 +177,18 @@
                         alert(res.message);
                         $("#add_product_modal").modal("hide");
                         $("#product_form")[0].reset();
+                        loadData();
                     }
                 }
             })
         })
 
-        $.ajax({
-            url: "http://localhost:8000/api/products.php",
-            method: "GET",
-            dataType: "json",
-            success: function (res) {
-                console.log(res);
-                if (res.status === "success") {
-                    let output = "";
-                    res.data.forEach((product, index) => {
-                        output += `
-                                    <tr class="">
-                                        <th scope="row">${index + 1}</th>
-                                        <td><img src="./api/product_image/${product.product_img}" class="img-thumbnail" style="width:80px;height:80px;object-fit:cover;"/></td>
-                                        <td>${product.product_name}</td>
-                                        <td>$${product.price}</td>
-                                        <td>${product.qty}</td>
-                                        <td>
-                                            <button type="button" class="btn btn-warning btn-sm">Edit</button>  
-                                            <button type="button" class="btn btn-danger btn-sm delete_product" data-id="${product.id}">Delete</button>    
-                                        </td>
-                                    </tr>
-                                `;
-                    });
-                    $("#data_row").html(output);
 
-                    $(".delete_product").on("click", function(e){
-                        let productId = $(this).data("id");
-                        console.log(productId);
-                        e.preventDefault();
-                        if(confirm("Are u sure?")){
-                            $.ajax({
-                                url: "http://localhost:8000/api/delete_product.php",
-                                method: "POST",
-                                data: {id: productId},
-                                dataType: "json",
-                                success: function (response) {
-                                    if (response.status === "success") {
-                                        alert(response.message);
-                                    } else {
-                                        alert(response.message);
-                                    }
-                                },
-                                error: function (xhr, status, error) {
-                                    console.error("Error:", error);
-                                }
-                                    })
-                                }
-                    })
-                } else {
-                    console.log(res.message);
-                }
 
-            },
-            error: function (xhr, status, error) {
-                console.log(error);
 
-            }
-        })
+
+
+        loadData();
     })
 </script>
 
