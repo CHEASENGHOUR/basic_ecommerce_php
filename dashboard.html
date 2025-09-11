@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,21 +13,25 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <link rel="stylesheet" href="./assets/dashboard.css">
-    
+
 </head>
+
 <body>
     <div class=" d-flex" id="container">
         <div id="sidebar" class="">
             <h1>Dashboard</h1>
             <ul class=" list-unstyled my-4 d-flex flex-column gap-5">
                 <li>
-                    <a href="/dashboard.html" class=" nav-link border border-3 border-start-0 border-end-0 px-5 py-2 border-black">Dashboard</a>
+                    <a href="/dashboard.html"
+                        class=" nav-link border border-3 border-start-0 border-end-0 px-5 py-2 border-black">Dashboard</a>
                 </li>
                 <li>
-                    <a href="/products.html" class="nav-link border border-3 border-start-0 border-end-0 px-5 py-2 border-black ">Product</a>
+                    <a href="/products.html"
+                        class="nav-link border border-3 border-start-0 border-end-0 px-5 py-2 border-black ">Product</a>
                 </li>
                 <li>
-                    <a href="/orders.html" class=" nav-link border border-3 border-start-0 border-end-0 px-5 py-2 border-black">Order</a>
+                    <a href="/orders.html"
+                        class=" nav-link border border-3 border-start-0 border-end-0 px-5 py-2 border-black">Order</a>
                 </li>
             </ul>
         </div>
@@ -40,33 +45,71 @@
                 <thead>
                     <tr>
                         <th scope="col">#</th>
-                        <th scope="col">First</th>
-                        <th scope="col">Last</th>
-                        <th scope="col">Handle</th>
+                        <th scope="col">Image</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Action</th>
                     </tr>
                 </thead>
-                <!-- <tbody>
-                    <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">2</th>
-                        <td>Jacob</td>
-                        <td>Thornton</td>
-                        <td>@fat</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">3</th>
-                        <td>John</td>
-                        <td>Doe</td>
-                        <td>@social</td>
-                    </tr>
-                </tbody> -->
+                <tbody id="user_data">
+
+                </tbody>
             </table>
         </div>
     </div>
 </body>
+<script>
+
+    $(document).ready(function () {
+        function loadData() {
+            $.ajax({
+                url: "http://localhost:8000/api/users.php",
+                method: "GET",
+                dataType: "json",
+                success: function (res) {
+                    console.log(res);
+                    if (res.status === "success") {
+                        let row = "";
+                        res.data.map((user, index) => {
+                            row += `
+                                <tr class="">
+                                        <th scope="row">${index + 1}</th>
+                                        <td><img src="./api/upload/${user.image}" class="img-thumbnail" style="width:80px;height:80px;object-fit:cover;"/></td>
+                                        <td>${user.name}</td>
+                                        <td>${user.email}</td>
+                                        <td>
+                                            <button type="button" 
+                                                class="btn ${user.is_admin == 1 ? "btn-danger" : "btn-warning"} btn-sm btn-admin" 
+                                                data-id="${user.id}">
+                                                ${user.is_admin == 1 ? "Remove Admin" : "Add Admin"}
+                                            </button>    
+                                        </td>
+                                </tr>
+                            `
+                        });
+                        $("#user_data").html(row);
+                    }
+                },
+                error: function (xhr, status, e) {
+                    console.log(e);
+                }
+            })
+        }
+        loadData();
+        $(document).on("click", ".btn-admin", function () {
+            let userId = $(this).data("id");
+            $.ajax({
+                url: "http://localhost:8000/api/up_admin.php",
+                method: "POST",
+                data: { id: userId },
+                dataType: "json",
+                success: function (res) {
+                    console.log(res);
+                    loadData(); // reload after update
+                }
+            })
+        });
+    })
+</script>
+
 </html>
